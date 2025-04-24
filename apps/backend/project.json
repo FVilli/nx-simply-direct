@@ -32,6 +32,20 @@
           "buildTarget": "backend:build:production"
         }
       }
+    },
+    "prisma-migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/backend",
+        "command": "npx prisma migrate dev"
+      }
+    },
+    "zenstack-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/backend",
+        "command": "npx zenstack generate"
+      }
     }
   },
   "tags": []

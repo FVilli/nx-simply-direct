@@ -14,7 +14,12 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@simply-direct/common": ["libs/common/src/index.ts"],
+      "@simply-direct/nestjs-core": ["libs/nestjs-core/src/index.ts"],
+      "@simply-direct/ngx-core": ["libs/ngx-core/src/index.ts"],
+      "@simply-direct/zenstack-checker": ["libs/zenstack-checker/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

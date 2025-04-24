@@ -1,10 +1,20 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
+import { Module, OnApplicationBootstrap } from '@nestjs/common';
 import { AppService } from './app.service';
+import { CoreGateway, CoreModule } from '@simply-direct/nestjs-core';
+import { DemoService } from './demo.service';
+
 
 @Module({
-  imports: [],
-  controllers: [AppController],
+  imports: [CoreModule],
+  controllers: [],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements OnApplicationBootstrap {
+  constructor(
+    private gtw: CoreGateway,
+    private demoService: DemoService,
+  ) {}
+  async onApplicationBootstrap() {
+    this.gtw.register(this.demoService.serviceName, this.demoService, false);
+  }
+}

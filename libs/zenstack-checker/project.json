@@ -1,0 +1,34 @@
+{
+  "name": "zenstack-checker",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/zenstack-checker/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "generatorOptions": {
+        "packageRoot": "dist/{projectRoot}",
+        "currentVersionResolver": "git-tag",
+        "fallbackCurrentVersionResolver": "disk"
+      }
+    }
+  },
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/zenstack-checker",
+        "tsConfig": "libs/zenstack-checker/tsconfig.lib.json",
+        "packageJson": "libs/zenstack-checker/package.json",
+        "main": "libs/zenstack-checker/src/index.ts",
+        "assets": ["libs/zenstack-checker/*.md"]
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    }
+  }
+}
