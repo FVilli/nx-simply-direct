@@ -22,18 +22,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Bump version
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git push --follow-tags origin main
-          npm run version:bump
+      # - name: Bump version
+      #   run: |
+      #     git config user.name "github-actions[bot]"
+      #     git config user.email "github-actions[bot]@users.noreply.github.com"
+      #     git push --follow-tags origin main
+      #     npm run version:bump
 
-      - name: Push new version tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git push --follow-tags origin main
+      # - name: Push new version tag
+      #   run: |
+      #     git config user.name "github-actions[bot]"
+      #     git config user.email "github-actions[bot]@users.noreply.github.com"
+      #     git push --follow-tags origin main
 
       - name: Build libraries
         run: npx nx run-many --target=build --all --exclude $(npx nx show projects --projects "apps/*")

@@ -1,6 +1,6 @@
 {
   "name": "@nx-simply-direct/source",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "scripts": {
     "backend:migrate": "nx run backend:zenstack-generate && nx run backend:prisma-migrate",
@@ -10,7 +10,8 @@
     "common:publish": "nx run-many --target=build --all --exclude $(npx nx show projects --projects 'apps/*') && npm publish --access public dist/libs/common",
     "nestjs-core:publish": "nx run-many --target=build --all && npm publish --access public dist/libs/nestjs-core",
     "ngx-core:publish": "nx run-many --target=build --all && npm publish --access public dist/libs/ngx-core",
-    "version:bump": "standard-version --release-as patch"
+    "version:bump": "standard-version --release-as patch",
+    "pub": "sh ./scripts/publish.sh"
   },
   "private": true,
   "dependencies": {
