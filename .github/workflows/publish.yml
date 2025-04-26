@@ -36,7 +36,7 @@ jobs:
           git push --follow-tags origin main
 
       - name: Build libraries
-        run: npx nx run-many --target=build --all
+        run: npx nx run-many --target=build --all --exclude $(npx nx show projects --type=application)
 
       - name: Publish library common
         run: npm publish dist/libs/common --access public
