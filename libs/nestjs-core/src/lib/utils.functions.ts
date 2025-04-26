@@ -16,17 +16,6 @@ export function hash(text: string): string {
 export function QUID(): string {
   return crypto.randomUUID().substring(0, 8);
 }
-export function ITdt(dt: Date = new Date()): string {
-    return new Intl.DateTimeFormat('it-IT', {
-      timeZone: 'Europe/Rome', // 🇮🇹 Fuso orario italiano
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    }).format(dt);
-  }
   
   export function isMatching(event: string, subscriptions: string[]): boolean {
     if (subscriptions.includes('**')) return true;

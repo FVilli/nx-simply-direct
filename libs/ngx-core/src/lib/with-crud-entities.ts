@@ -5,7 +5,7 @@ import { NamedEntityProps, NamedEntityState, setAllEntities, setEntity, withEnti
 import { CoreService } from "./core.service";
 import { inject } from "@angular/core";
 import { Entity } from "@angular-architects/ngrx-toolkit";
-import { CoreStore } from "./store";
+import { CoreStore } from "./core.store";
 import { clone } from '@simply-direct/common';
 
 export interface AuditInfo {
@@ -38,7 +38,6 @@ export function withCrudEntities<E extends Entity, Collection extends string>(co
         withMethods(store => { 
         
             const core = inject(CoreService);
-            const coreStore = inject(CoreStore);
     
             const _loadRawData = async () => {
                 patchState(store, setBusy(true),setError());
@@ -54,7 +53,7 @@ export function withCrudEntities<E extends Entity, Collection extends string>(co
             const _editItem = (item: Partial<E & AuditInfo> | null = null) => {
                 const itemToEdit = item ? clone(item) : null;
                 if(itemToEdit) {
-                    const users = coreStore.userEntities();
+                    const users = core.$users();
                     if(Object.prototype.hasOwnProperty.call(itemToEdit, 'created_by')) (<any>itemToEdit).created_by_user = users.find(u => u.id === (<any>itemToEdit).created_by)?.name;
                     if(Object.prototype.hasOwnProperty.call(itemToEdit, 'updated_by')) (<any>itemToEdit).updated_by_user = users.find(u => u.id === (<any>itemToEdit).updated_by)?.name;
                 }

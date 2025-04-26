@@ -1,2 +1,6 @@
-<app-nx-welcome></app-nx-welcome>
-<router-outlet></router-outlet>
+@if(!coreStore.initialized()) {
+    <app-splash></app-splash> 
+}
+@else {
+    <router-outlet></router-outlet>
+}

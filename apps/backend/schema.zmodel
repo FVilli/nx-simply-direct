@@ -7,9 +7,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-plugin zenstackmd {
-    provider = 'zenstack-markdown'
-}
+// plugin zenstackmd {
+//     provider = 'zenstack-markdown'
+// }
 
 // plugin zod {
 //   provider = '@core/zod'

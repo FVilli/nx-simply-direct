@@ -8,7 +8,7 @@ export function ClientUID():string {
     if(cid) return cid;
     const uid = uuidToBase64(crypto.randomUUID());
     localStorage.setItem(CLIENT_ID_KEY, uid);
-    console.log(`Client ID generated and stored in localStorage (${uid})`);
+    console.log(`${ITdt()} <CORE> Client UID generated and stored in localStorage (${uid})`);
     return uid;
   };
 

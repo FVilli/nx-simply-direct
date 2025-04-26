@@ -24,14 +24,15 @@ export function withLookupEntities<E extends Entity, Collection extends string>(
         
         withHooks(store => {
             const core = inject(CoreService);
+            
             const { stream, unsubscribe } = core.subscribe<E>([`prisma.${collection}.create.*.after`,`prisma.${collection}.update.*.after`]);
-            stream.subscribe( user => { patchState(store, setEntity(user, { collection })); });
+            stream.subscribe( item => { patchState(store, setEntity(item, { collection })); });
     
             return {
                 onInit: async () => { 
                     const items = await core.prisma<E[]>(`${collection}.findMany`) || [];
                     patchState(store, setAllEntities(items, { collection }));
-                 },
+                },
                 onDestroy: () => { unsubscribe(); }
             }
         }),

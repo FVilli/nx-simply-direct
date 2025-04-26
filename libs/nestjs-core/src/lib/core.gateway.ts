@@ -8,37 +8,53 @@ import { ENV } from './env';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
 import { Injectable, OnApplicationBootstrap, OnModuleInit } from '@nestjs/common';
-import { hash, QUID, distinctSubscriptions, isMatching, ITdt } from './utils.functions';
-import { BaseService, IAuth, IEvent, IJwtPayload, ILoginMsg, ILogoutMsg, IRefreshMsg, IResponse, ISubscriptions, Message, User } from '@simply-direct/common'
+import { hash, QUID, distinctSubscriptions, isMatching } from './utils.functions';
+import { BaseService, IAuth, IEvent, IJwtPayload, ILoginMsg, ILogoutMsg, IRefreshMsg, IResponse, ISubscriptions, ITdt, Message, User } from '@simply-direct/common'
 
 export interface ISocketSession { socket: Socket; clientId?: string; auth: IAuth | null; subscriptions: ISubscriptions;} // questa la devo spostare in nestjs-core
 
 @Injectable() export class PrismaService extends PrismaClient implements OnModuleInit { async onModuleInit() { await this['$connect'](); } }
 
-@WebSocketGateway({ cors: true, pingInterval: 1000, pingTimeout: 1000 })
+@WebSocketGateway({ cors: true, pingInterval: 1000, pingTimeout: 1000, transports: ['websocket'] }) // 'polling','websocket','webtransport'
 export class CoreGateway implements OnApplicationBootstrap {
   Sessions = new Map<string, ISocketSession>();
   private ServicesMap = new Map<string, { service: BaseService; requiresAuth: boolean }>();
   private sysUsr!:User;
-  constructor(private readonly prisma: PrismaService, private readonly eventEmitter: EventEmitter2, private jwtService: JwtService) {}
+  constructor(private readonly prismaService: PrismaService, private readonly eventEmitter: EventEmitter2, private jwtService: JwtService) {}
+  
   async onApplicationBootstrap() {
     // serve perchè quando stoppo il backend potrei non fare in tempo a gestire bene tutte le disconnessioni
     // che riporterebbero comunque sessions a 0
-    await this.prisma['client'].updateMany({ data: { sessions: 0 } });
-    this.sysUsr = await this.prisma['user'].findFirst({ where: { name: 'system' } }) || await this.prisma['user'].create({ data: { name: 'system', phash: '', disabled: false, role:'SYSTEM' } });
+    await this.prismaService['client'].updateMany({ data: { sessions: 0 } });
+    this.sysUsr = await this.prismaService['user'].findFirst({ where: { name: 'system' } }) || await this.prismaService['user'].create({ data: { name: 'system', phash: '', disabled: false, role:'SYSTEM' } });
+  }
+
+  _log = false;
+  log(enable:boolean) { this._log = enable; }
+  console(message?: any, ...optionalParams: any[]) {
+    if(this._log) console.log(message, ...optionalParams);
   }
 
   register(serviceName: string, service: BaseService, requiresAuth = true) {
     this.ServicesMap.set(serviceName, { service, requiresAuth });
-    console.log(`${ITdt()} <CORE> Registered service:`, serviceName);
+    this.console(`${ITdt()} 🤖 Registered service:`, serviceName);
   }
 
   private async handleConnection(socket: Socket) {
-    const clientId = <string>socket.client.request.headers['client-id'];
-    const userAgent = socket.client.request.headers['user-agent'];
-    console.log(`${ITdt()} <CORE> [connected] socket.id:`, socket.id, 'clientId:', clientId);
+
+    this.console(`${ITdt()} 🤖 [socket] url:`, socket.client.request.url);
+
+    const queryString = socket.client.request.url?.split('?')[1] ?? '';
+    const params = new URLSearchParams(queryString);
+    const clientId = params.get('client-id');
+    if(!clientId) return;
+
+    const userAgent = socket.client.request.headers['user-agent'] || '?';
+    this.console(`${ITdt()} 🤖 [connected] socket.id:`, socket.id, 'clientId:', clientId,"transport:",socket.conn.transport.name,"userAgent:",userAgent);
+    
     this.Sessions.set(socket.id, { socket: socket, clientId, subscriptions: [], auth:null });
-    await this.prisma['client'].upsert({
+
+    await this.prismaService['client'].upsert({
       where: { name: clientId },
       update: { agent: userAgent, sessions: { increment: 1 }, updated_at: new Date() },
       create: { name: clientId, agent: userAgent, sessions: 1 },
@@ -47,9 +63,10 @@ export class CoreGateway implements OnApplicationBootstrap {
 
   private async handleDisconnect(socket: Socket) {
     const clientId = this.Sessions.get(socket.id)?.clientId;
-    console.log(`${ITdt()} <CORE> [disconnected] socket.id:`, socket.id, 'clientId:', clientId);
+    if(!clientId) return;
+    this.console(`${ITdt()} 🤖 [disconnected] socket.id:`, socket.id, 'clientId:', clientId);
     this.Sessions.delete(socket.id);
-    await this.prisma['client'].update({
+    await this.prismaService['client'].update({
       where: { name: clientId },
       data: { sessions: { decrement: 1 }, updated_at: new Date() },
     });
@@ -72,9 +89,9 @@ export class CoreGateway implements OnApplicationBootstrap {
         const sessions = Array.from(this.Sessions.values()).filter(s => (s.clientId === clientId || clientId === '**') && !excludeSocketIds.includes(s.socket.id));
         if (sessions.length === 0) resolve([]);
         sessions.forEach(session => {
-          console.log('request', session.clientId, topic);
+          this.console('request', session.clientId, topic);
           session.socket.emit('request', { topic, payload }, (rv: IResponse<RS>) => {
-            //console.log('response', session.clientId, rv);
+            //this.console('response', session.clientId, rv);
             responses.push(rv);
             if (responses.length === sessions.length) resolve(responses);
           });
@@ -90,7 +107,7 @@ export class CoreGateway implements OnApplicationBootstrap {
   // ================================================================================================
   @SubscribeMessage('auth')
   private async handleLogin(@MessageBody() msg: Message<any>, @ConnectedSocket() socket: Socket):Promise<IResponse<IAuth>> {
-    console.log(`${ITdt()} <CORE> [auth] socket.id:${socket.id} msg:`, msg.topic);
+    this.console(`${ITdt()} 🤖 [auth] socket.id:${socket.id} msg:`, msg.topic);
     try {
       const session = this.Sessions.get(socket.id)!;
       // if(!session) throw new Error('Session not found');
@@ -108,27 +125,33 @@ export class CoreGateway implements OnApplicationBootstrap {
           session.auth = await this.refresh(msg.payload, session.clientId! );
           break;
       }
+      this.synchronizeSessions(session.clientId!,session.auth,socket.id);
       return { data: session.auth, status: session.auth ? 'OK' : 'NO-AUTH' };
     } catch (err:any) {
       console.error('err:', err?.message);
       return { data:null, err: err?.message };
     }
   }
+  synchronizeSessions(clientId: string, auth: IAuth | null, exceptSocketId:string) {
+    this.Sessions.forEach(session => {
+      if (session.clientId === clientId && session.socket.id !== exceptSocketId) session.auth = auth;
+    });
+  }
 
   private async login(payload: ILoginMsg, clientId: string): Promise<IAuth | null> {
     const phash = hash(payload.password);
     const name = payload.username;
-    const user = await this.prisma['user'].findFirst({ where: { name, phash } });
+    const user = await this.prismaService['user'].findFirst({ where: { name, phash } });
     if (!!user && !user.disabled) {
       const token = this.jwtService.sign({ username: name, sub: user.id, clientId }, { expiresIn: ENV.JWT_EXPIRES_IN, secret: ENV.JWT_SECRET });
-      await this.prisma['client'].update({
+      await this.prismaService['client'].update({
         where: { name: payload.clientId },
         data: { token, user_id: user.id, updated_at: new Date() },
       });
-      delete user.phash;
+      //delete user.phash;
       return { user, token };
     } else {
-      await this.prisma['client'].update({
+      await this.prismaService['client'].update({
         where: { name: payload.clientId },
         data: { user_id: null, updated_at: new Date() },
       });
@@ -137,7 +160,7 @@ export class CoreGateway implements OnApplicationBootstrap {
   }
   private async logout(payload: ILogoutMsg, cs: ISocketSession): Promise<void> {
     if (cs.clientId !== payload.clientId) console.error('Anomalous logout');
-    await this.prisma['client'].update({
+    await this.prismaService['client'].update({
       where: { name: payload.clientId },
       data: { token: null, user_id: null, updated_at: new Date() },
     });
@@ -146,20 +169,21 @@ export class CoreGateway implements OnApplicationBootstrap {
     try {
       const tokenPayload = this.jwtService.verify<IJwtPayload>(payload.token, { secret: ENV.JWT_SECRET });
       if (clientId !== tokenPayload.clientId) console.error('Anomalous refresh');
-      const user = await this.prisma['user'].findFirst({ where: { id: tokenPayload.sub } });
+      const user = await this.prismaService['user'].findFirst({ where: { id: tokenPayload.sub } });
+      if (!user) throw new Error('User not found');
       if (user.disabled) throw new Error('User disabled');
-      const client = await this.prisma['client'].findFirst({ where: { name: clientId } });
+      const client = await this.prismaService['client'].findFirst({ where: { name: clientId } });
       if (!client || client.token !== payload.token) throw new Error('Token revoked');
       const token = this.jwtService.sign({ username: user.name, sub: user.id, clientId }, { expiresIn: ENV.JWT_EXPIRES_IN, secret: ENV.JWT_SECRET });
-      await this.prisma['client'].update({
+      await this.prismaService['client'].update({
         where: { name: payload.clientId },
         data: { token, user_id: user.id, updated_at: new Date() },
       });
-      delete user.phash;
+      //delete user.phash;
       return { user, token };
     } catch (err:any) {
       console.error(err?.message);
-      await this.prisma['client'].update({
+      await this.prismaService['client'].update({
         where: { name: payload.clientId },
         data: { token: null, user_id: null, updated_at: new Date() },
       });
@@ -172,7 +196,7 @@ export class CoreGateway implements OnApplicationBootstrap {
   // ================================================================================================
   @SubscribeMessage('request')
   private async handleRequest<T>(@MessageBody() msg: Message<any>, @ConnectedSocket() socket: Socket): Promise<IResponse<T>> {
-    console.log(`${ITdt()} <CORE> [request] socket.id:${socket.id} msg:`, msg);
+    this.console(`${ITdt()} 🤖 [request] socket.id:${socket.id} msg:`, msg);
     try {
       const serviceName = msg.topic.split('.')[0];
       const methodName = msg.topic.split('.')[1];
@@ -194,7 +218,7 @@ export class CoreGateway implements OnApplicationBootstrap {
   // ================================================================================================
   @SubscribeMessage('message')
   private async handleMessage(@MessageBody() msg: Message<any>, @ConnectedSocket() socket: Socket): Promise<IResponse<string>> {
-    //console.log(`<CORE> [message] socket.id:${socket.id} msg:`, msg);
+    //this.console(`🤖 [message] socket.id:${socket.id} msg:`, msg);
     try {
       const serviceName = msg.topic.split('.')[0];
       const methodName = msg.topic.split('.')[1];
@@ -208,7 +232,7 @@ export class CoreGateway implements OnApplicationBootstrap {
         const st = new Date();
         await (<any>service)[methodName](msg.payload, auth);
         const ms = new Date().getTime() - st.getTime();
-        console.log(`${ITdt()} <CORE> [executed] ${msg.topic} requested by ${auth?.user.id} in ${ms} ms`);
+        this.console(`${ITdt()} 🤖 [executed] ${msg.topic} requested by ${auth?.user.id} in ${ms} ms`);
       });
       return { data:null, status: 'OK' };
     } catch (err:any) {
@@ -222,7 +246,7 @@ export class CoreGateway implements OnApplicationBootstrap {
   // ================================================================================================
   @SubscribeMessage('prisma')
   private async handlePrismaRequest<T>(@MessageBody() msg: Message<any>, @ConnectedSocket() socket: Socket): Promise<IResponse<T>> {
-    console.log(`${ITdt()} <CORE> [prisma] socket.id:${socket.id} msg:`, msg);
+    this.console(`${ITdt()} 🤖 [prisma] socket.id:${socket.id} msg:`, msg);
     try {
       const entityName = msg.topic.split('.')[0];
       const methodName = msg.topic.split('.')[1];
@@ -239,21 +263,21 @@ export class CoreGateway implements OnApplicationBootstrap {
   }
 
   private async _prismaHnd<T>(entityName: string, methodName: string, param: any, user?: User):Promise<T> {
-    const prismaEnhanced = enhance(this.prisma, { user });
+    const prismaEnhanced = enhance(this.prismaService, { user });
     this.publishEvent(`prisma.${entityName}.${methodName}.${param?.id || param?.where?.id || param?.data?.id ||'?'}.before`, param);
     this.byUser(methodName,param,user);
-    const rv:any = await prismaEnhanced[entityName][methodName](param);
+    const rv:any = await (<any>prismaEnhanced)[entityName][methodName](param);
     this.publishEvent(`prisma.${entityName}.${methodName}.${rv?.id || '?'}.after`, rv);
     return rv as T;
   }
 
-  public async prismaHnd<T>(entityName: string, methodName: string, param: any):Promise<T> {
+  public async prisma<T>(entityName: string, methodName: string, param: any):Promise<T> {
     return await this._prismaHnd<T>(entityName, methodName, param, this.sysUsr);
   }
 
   // updated_at & created_at li gestisce zenstack & postgres
   // per ora la cancellazione, che sarà logica, non è gestita
-  byUser(method:string, arg:any, user?:User) {
+  private byUser(method:string, arg:any, user?:User) {
     if(!user?.id) return;
     switch (method) {
       case 'create':
@@ -278,7 +302,7 @@ export class CoreGateway implements OnApplicationBootstrap {
   // ================================================================================================
   @SubscribeMessage('subscriptions')
   private async handleSubscription(@MessageBody() msg: Message<any>, @ConnectedSocket() socket: Socket) {
-    console.log(`${ITdt()} <CORE> [subscriptions] socket.id:${socket.id} msg:`, msg);
+    this.console(`${ITdt()} 🤖 [subscriptions] socket.id:${socket.id} msg:`, msg);
     try {
       const session = this.Sessions.get(socket.id)!;
       if (!session.auth && !ENV.SKIP_AUTH) throw new Error('Unauthorized');
@@ -297,7 +321,7 @@ export class CoreGateway implements OnApplicationBootstrap {
       }
       return session.subscriptions;
     } catch (err:any) {
-      console.error(`${ITdt()} <CORE> err:`, err?.message);
+      console.error(`${ITdt()} 🤖 err:`, err?.message);
       return { error: err?.message };
     }
   }
@@ -307,7 +331,7 @@ export class CoreGateway implements OnApplicationBootstrap {
     for (const session of this.Sessions.values()) {
       if (isMatching(event.name, distinctSubscriptions(session.subscriptions))) {
         session.socket.emit('event', event, (rv: IResponse<any>) => {
-          console.log(`${ITdt()} <CORE> event`, event.name, 'dispatched to:', session.clientId, 'rv:', rv);
+          this.console(`${ITdt()} 🤖 event`, event.name, 'dispatched to:', session.clientId, 'rv:', rv);
         });
       }
     }
@@ -315,7 +339,7 @@ export class CoreGateway implements OnApplicationBootstrap {
 
   public publishEvent<T>(name: string, payload: T) {
     const event: IEvent<T> = { name, payload, ts: new Date(), id: QUID() };
-    console.log(`${ITdt()} <CORE> publishing event:`, event.name);
+    this.console(`${ITdt()} 🤖 publishing event:`, event.name);
     this.eventEmitter.emit(name, event);
   }
 }

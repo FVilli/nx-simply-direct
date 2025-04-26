@@ -1,13 +1,19 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { SplashComponent } from './components/splash.component';
+import { CoreService, CoreStore } from '@simply-direct/ngx-core';
 
 @Component({
-  imports: [NxWelcomeComponent, RouterModule],
+  imports: [SplashComponent, RouterModule],
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
 })
 export class AppComponent {
-  title = 'frontend-blank';
+
+  readonly coreStore = inject(CoreStore);
+  readonly coreService = inject(CoreService);
+  constructor() {
+    this.coreService.log(true);
+  }
+  
 }

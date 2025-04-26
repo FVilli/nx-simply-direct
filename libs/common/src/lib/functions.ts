@@ -5,7 +5,7 @@ export function delay(ms: number) {
 }
 
 export function ITdt(dt: Date = new Date()): string {
-  return new Intl.DateTimeFormat('it-IT', {
+  const rv =  new Intl.DateTimeFormat('it-IT', {
     timeZone: 'Europe/Rome', // 🇮🇹 Fuso orario italiano
     year: 'numeric',
     month: '2-digit',
@@ -14,6 +14,8 @@ export function ITdt(dt: Date = new Date()): string {
     minute: '2-digit',
     second: '2-digit',
   }).format(dt);
+  const milliseconds = dt.getMilliseconds().toString().padStart(3, '0');
+  return `${rv}.${milliseconds}`;
 }
 
 export function isMatching(event: string, subscriptions: string[]): boolean {
