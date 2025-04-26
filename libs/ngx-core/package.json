@@ -1,6 +1,6 @@
 {
   "name": "@simply-direct/ngx-core",
-  "version": "v0.0.7",
+  "version": "0.0.8",
   "peerDependencies": {
     "@angular/core": "^19.2.0",
     "@angular/router": "^19.2.0",
