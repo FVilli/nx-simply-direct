@@ -7,9 +7,9 @@
     "backend:serve": "nx run backend:serve",
     "frontend-blank:serve": "nx run frontend-blank:serve",
     "frontend-blank:build-watch": "nx run frontend-blank:build:development --watch",
-    "common:publish": "nx run-many --target=build --all && npm publish dist/libs/common",
-    "nestjs-core:publish": "nx run-many --target=build --all && npm publish dist/libs/nestjs-core",
-    "ngx-core:publish": "nx run-many --target=build --all && npm publish dist/libs/ngx-core",
+    "common:publish": "nx run-many --target=build --all --exclude $(npx nx show projects --projects 'apps/*') && npm publish --access public dist/libs/common",
+    "nestjs-core:publish": "nx run-many --target=build --all && npm publish --access public dist/libs/nestjs-core",
+    "ngx-core:publish": "nx run-many --target=build --all && npm publish --access public dist/libs/ngx-core",
     "version:bump": "standard-version --release-as patch"
   },
   "private": true,
