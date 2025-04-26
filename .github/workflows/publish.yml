@@ -38,10 +38,10 @@ jobs:
       - name: Build libraries
         run: npx nx run-many --target=build --all --exclude $(npx nx show projects --projects "apps/*")
 
-      - name: Publish library common
-        run: npm publish dist/libs/common --access public --tag latest
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # - name: Publish library common
+      #   run: npm publish dist/libs/common --access public --tag latest
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     
       - name: Publish library nestjs-core
         run: npm publish dist/libs/nestjs-core --access public --tag latest
