@@ -1,0 +1,50 @@
+name: Release and Publish Libraries
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    if: startsWith(github.event.head_commit.message, '[release]')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bump version
+        run: npm run version:bump
+
+      - name: Push new version tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git push --follow-tags origin main
+
+      - name: Build libraries
+        run: nx run-many --target=build --all
+
+      - name: Publish library common
+        run: npm publish dist/libs/common --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    
+      - name: Publish library nestjs-core
+        run: npm publish dist/libs/nestjs-core --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish library ngx-core
+        run: npm publish dist/libs/ngx-core --access public
+        env:
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
