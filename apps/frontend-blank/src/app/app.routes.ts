@@ -1,4 +1,4 @@
-import { Route, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { authGuard } from '@simply-direct/ngx-core';
 import { HomePageComponent } from './pages/home.page';
 import { DashboardPageComponent } from './pages/dashboard.page';
