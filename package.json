@@ -1,6 +1,6 @@
 {
   "name": "@nx-simply-direct/source",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "license": "MIT",
   "scripts": {
     "backend:migrate": "nx run backend:zenstack-generate && nx run backend:prisma-migrate",
@@ -32,7 +32,7 @@
     "@nestjs/platform-socket.io": "^11.0.10",
     "@nestjs/websockets": "^11.0.10",
     "@ngrx/signals": "^19.1.0",
-    "@prisma/client": "6.5.0",
+    "@prisma/client": "6.8.2",
     "@zenstackhq/runtime": "^2.14.0",
     "@zenstackhq/server": "^2.14.0",
     "axios": "^1.6.0",
