@@ -148,7 +148,7 @@ export class CoreGateway implements OnApplicationBootstrap {
     const name = payload.username;
     const user = await this.prismaService['user'].findFirst({ where: { name, phash } });
     if (!!user && !user.disabled) {
-      const token = this.jwtService.sign({ username: name, sub: user.id, clientId }, { expiresIn: this.options.JwtExpiresIn, secret: this.options.JwtSecret });
+      const token = this.jwtService.sign({ username: name, sub: user.id, clientId }, { expiresIn: this.options.jwtExpiresIn, secret: this.options.jwtSecret });
       await this.prismaService['client'].update({
         where: { name: payload.clientId },
         data: { token, user_id: user.id, updated_at: new Date() },
@@ -172,14 +172,14 @@ export class CoreGateway implements OnApplicationBootstrap {
   }
   private async refresh(payload: IRefreshMsg, clientId: string): Promise<IAuth | null> {
     try {
-      const tokenPayload = this.jwtService.verify<IJwtPayload>(payload.token, { secret: this.options.JwtSecret });
+      const tokenPayload = this.jwtService.verify<IJwtPayload>(payload.token, { secret: this.options.jwtSecret });
       if (clientId !== tokenPayload.clientId) console.error('Anomalous refresh');
       const user = await this.prismaService['user'].findFirst({ where: { id: tokenPayload.sub } });
       if (!user) throw new Error('User not found');
       if (user.disabled) throw new Error('User disabled');
       const client = await this.prismaService['client'].findFirst({ where: { name: clientId } });
       if (!client || client.token !== payload.token) throw new Error('Token revoked');
-      const token = this.jwtService.sign({ username: user.name, sub: user.id, clientId }, { expiresIn: this.options.JwtExpiresIn, secret: this.options.JwtSecret });
+      const token = this.jwtService.sign({ username: user.name, sub: user.id, clientId }, { expiresIn: this.options.jwtExpiresIn, secret: this.options.jwtSecret });
       await this.prismaService['client'].update({
         where: { name: payload.clientId },
         data: { token, user_id: user.id, updated_at: new Date() },
@@ -210,7 +210,7 @@ export class CoreGateway implements OnApplicationBootstrap {
       const serviceInfo = this.ServicesMap.get(serviceName)!;
       const service = serviceInfo.service;
       const requiresAuth = serviceInfo.requiresAuth;
-      if (requiresAuth && !auth && !this.options.SkipAuth) throw new Error('Unauthorized');
+      if (requiresAuth && !auth && !this.options.skipAuth) throw new Error('Unauthorized');
       return { data: await (<any>service)[methodName](msg.payload, auth) };
     } catch (err:any) {
       console.error('err:', err?.message);
@@ -232,7 +232,7 @@ export class CoreGateway implements OnApplicationBootstrap {
       const serviceInfo = this.ServicesMap.get(serviceName)!;
       const service = await serviceInfo.service;
       const requiresAuth = serviceInfo.requiresAuth;
-      if (requiresAuth && !auth && !this.options.SkipAuth) throw new Error('Unauthorized');
+      if (requiresAuth && !auth && !this.options.skipAuth) throw new Error('Unauthorized');
       setImmediate(async () => {
         const st = new Date();
         await (<any>service)[methodName](msg.payload, auth);
@@ -257,8 +257,8 @@ export class CoreGateway implements OnApplicationBootstrap {
       const methodName = msg.topic.split('.')[1];
       const session = this.Sessions.get(socket.id)!;
       const auth = session.auth;
-      if (!auth && !this.options.SkipAuth) throw new Error('Unauthorized');
-      if((this.options.NotAllowedPrismaMethods).includes(methodName)) throw new Error('Method not allowed');
+      if (!auth && !this.options.skipAuth) throw new Error('Unauthorized');
+      if((this.options.notAllowedPrismaMethods).includes(methodName)) throw new Error('Method not allowed');
       const data = await this._prismaHnd<T>(entityName, methodName, msg.payload, auth?.user);
       return { data };
     } catch (err:any) {
@@ -310,7 +310,7 @@ export class CoreGateway implements OnApplicationBootstrap {
     this.console(`${ITdt()} 🤖 [subscriptions] socket.id:${socket.id} msg:`, msg);
     try {
       const session = this.Sessions.get(socket.id)!;
-      if (!session.auth && !this.options.SkipAuth) throw new Error('Unauthorized');
+      if (!session.auth && !this.options.skipAuth) throw new Error('Unauthorized');
       switch (msg.topic) {
         case 'clear':
           session.subscriptions = {};

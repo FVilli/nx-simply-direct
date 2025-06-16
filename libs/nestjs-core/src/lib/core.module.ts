@@ -3,24 +3,26 @@ import { CoreGateway, PrismaService } from './core.gateway';
 import { JwtService } from '@nestjs/jwt';
 
 export interface CoreModuleOptions {
-  port?: number,
+  port: number,
   databaseUrl: string,
   jwtSecret: string,
-  jwtExpiresIn?: string,
-  skipAuth?: boolean,
-  notAllowedPrismaMethods?: string[],
+  jwtExpiresIn: string,
+  skipAuth: boolean,
+  notAllowedPrismaMethods: string[],
 }
 
-export const DEFAULT_OPTIONS: Partial<CoreModuleOptions> = {
+export const DEFAULT_OPTIONS:CoreModuleOptions = {
   port: 3000,
   jwtExpiresIn: '7d',
+  jwtSecret: 'secret',
   skipAuth: false,
-  notAllowedPrismaMethods: ['deleteMany','updateMany']
+  notAllowedPrismaMethods: ['deleteMany','updateMany'],
+  databaseUrl: 'postgresql://postgres:postgres@localhost:5432/postgres?schema=public'
 };
 
 @Module({})
 export class CoreModule {
-  static forRoot(options: CoreModuleOptions): DynamicModule {
+  static forRoot(options: Partial<CoreModuleOptions>): DynamicModule {
     const useValue: CoreModuleOptions = { ...DEFAULT_OPTIONS, ...options };
     console.log("CoreModule Options: ", useValue);
     return {
