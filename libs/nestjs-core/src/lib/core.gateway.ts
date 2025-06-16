@@ -4,12 +4,13 @@ import { WebSocketGateway, SubscribeMessage, MessageBody, ConnectedSocket } from
 import { Socket } from 'socket.io';
 import { enhance } from '@zenstackhq/runtime';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { ENV } from './env';
+//import { ENV } from './env';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
-import { Injectable, OnApplicationBootstrap, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnApplicationBootstrap, OnModuleInit } from '@nestjs/common';
 import { hash, QUID, distinctSubscriptions, isMatching } from './utils.functions';
 import { BaseService, IAuth, IEvent, IJwtPayload, ILoginMsg, ILogoutMsg, IRefreshMsg, IResponse, ISubscriptions, ITdt, Message, User } from '@simply-direct/common'
+import { CoreModuleOptions } from './core.module';
 
 export interface ISocketSession { socket: Socket; clientId?: string; auth: IAuth | null; subscriptions: ISubscriptions;} // questa la devo spostare in nestjs-core
 
@@ -20,7 +21,11 @@ export class CoreGateway implements OnApplicationBootstrap {
   Sessions = new Map<string, ISocketSession>();
   private ServicesMap = new Map<string, { service: BaseService; requiresAuth: boolean }>();
   private sysUsr!:User;
-  constructor(private readonly prismaService: PrismaService, private readonly eventEmitter: EventEmitter2, private jwtService: JwtService) {}
+  constructor(
+    @Inject('CORE_MODULE_OPTIONS') private options: CoreModuleOptions,
+    private readonly prismaService: PrismaService, 
+    private readonly eventEmitter: EventEmitter2, 
+    private jwtService: JwtService) {}
   
   async onApplicationBootstrap() {
     // serve perchè quando stoppo il backend potrei non fare in tempo a gestire bene tutte le disconnessioni
@@ -143,7 +148,7 @@ export class CoreGateway implements OnApplicationBootstrap {
     const name = payload.username;
     const user = await this.prismaService['user'].findFirst({ where: { name, phash } });
     if (!!user && !user.disabled) {
-      const token = this.jwtService.sign({ username: name, sub: user.id, clientId }, { expiresIn: ENV.JWT_EXPIRES_IN, secret: ENV.JWT_SECRET });
+      const token = this.jwtService.sign({ username: name, sub: user.id, clientId }, { expiresIn: this.options.JwtExpiresIn, secret: this.options.JwtSecret });
       await this.prismaService['client'].update({
         where: { name: payload.clientId },
         data: { token, user_id: user.id, updated_at: new Date() },
@@ -167,14 +172,14 @@ export class CoreGateway implements OnApplicationBootstrap {
   }
   private async refresh(payload: IRefreshMsg, clientId: string): Promise<IAuth | null> {
     try {
-      const tokenPayload = this.jwtService.verify<IJwtPayload>(payload.token, { secret: ENV.JWT_SECRET });
+      const tokenPayload = this.jwtService.verify<IJwtPayload>(payload.token, { secret: this.options.JwtSecret });
       if (clientId !== tokenPayload.clientId) console.error('Anomalous refresh');
       const user = await this.prismaService['user'].findFirst({ where: { id: tokenPayload.sub } });
       if (!user) throw new Error('User not found');
       if (user.disabled) throw new Error('User disabled');
       const client = await this.prismaService['client'].findFirst({ where: { name: clientId } });
       if (!client || client.token !== payload.token) throw new Error('Token revoked');
-      const token = this.jwtService.sign({ username: user.name, sub: user.id, clientId }, { expiresIn: ENV.JWT_EXPIRES_IN, secret: ENV.JWT_SECRET });
+      const token = this.jwtService.sign({ username: user.name, sub: user.id, clientId }, { expiresIn: this.options.JwtExpiresIn, secret: this.options.JwtSecret });
       await this.prismaService['client'].update({
         where: { name: payload.clientId },
         data: { token, user_id: user.id, updated_at: new Date() },
@@ -205,7 +210,7 @@ export class CoreGateway implements OnApplicationBootstrap {
       const serviceInfo = this.ServicesMap.get(serviceName)!;
       const service = serviceInfo.service;
       const requiresAuth = serviceInfo.requiresAuth;
-      if (requiresAuth && !auth && !ENV.SKIP_AUTH) throw new Error('Unauthorized');
+      if (requiresAuth && !auth && !this.options.SkipAuth) throw new Error('Unauthorized');
       return { data: await (<any>service)[methodName](msg.payload, auth) };
     } catch (err:any) {
       console.error('err:', err?.message);
@@ -227,7 +232,7 @@ export class CoreGateway implements OnApplicationBootstrap {
       const serviceInfo = this.ServicesMap.get(serviceName)!;
       const service = await serviceInfo.service;
       const requiresAuth = serviceInfo.requiresAuth;
-      if (requiresAuth && !auth && !ENV.SKIP_AUTH) throw new Error('Unauthorized');
+      if (requiresAuth && !auth && !this.options.SkipAuth) throw new Error('Unauthorized');
       setImmediate(async () => {
         const st = new Date();
         await (<any>service)[methodName](msg.payload, auth);
@@ -252,8 +257,8 @@ export class CoreGateway implements OnApplicationBootstrap {
       const methodName = msg.topic.split('.')[1];
       const session = this.Sessions.get(socket.id)!;
       const auth = session.auth;
-      if (!auth && !ENV.SKIP_AUTH) throw new Error('Unauthorized');
-      if((ENV.NOT_ALLOWED_PRISMA_METHODS).includes(methodName)) throw new Error('Method not allowed');
+      if (!auth && !this.options.SkipAuth) throw new Error('Unauthorized');
+      if((this.options.NotAllowedPrismaMethods).includes(methodName)) throw new Error('Method not allowed');
       const data = await this._prismaHnd<T>(entityName, methodName, msg.payload, auth?.user);
       return { data };
     } catch (err:any) {
@@ -305,7 +310,7 @@ export class CoreGateway implements OnApplicationBootstrap {
     this.console(`${ITdt()} 🤖 [subscriptions] socket.id:${socket.id} msg:`, msg);
     try {
       const session = this.Sessions.get(socket.id)!;
-      if (!session.auth && !ENV.SKIP_AUTH) throw new Error('Unauthorized');
+      if (!session.auth && !this.options.SkipAuth) throw new Error('Unauthorized');
       switch (msg.topic) {
         case 'clear':
           session.subscriptions = {};
