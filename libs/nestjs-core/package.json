@@ -1,6 +1,6 @@
 {
   "name": "@simply-direct/nestjs-core",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -16,7 +16,7 @@
     "@nestjs/platform-socket.io": "^11.0.10",
     "@nestjs/websockets": "^11.0.10",
     "@prisma/client": "6.8.2",
-    "@zenstackhq/runtime": "2.13.0"
+    "@zenstackhq/runtime": "2.15.1"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",
