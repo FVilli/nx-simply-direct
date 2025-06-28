@@ -2,7 +2,7 @@ import { Project, Decorator } from 'ts-morph';
 import * as path from 'path';
 import * as fs from 'fs';
 
-const OUTPUT_PATH = 'src/rpc-contract.generated.ts';
+const OUTPUT_PATH = '../frontend/src/@generated/api.service.ts';
 const DECORATOR_NAME = 'DirectMethod'; 
 
 const project = new Project({ tsConfigFilePath: 'tsconfig.json' });
