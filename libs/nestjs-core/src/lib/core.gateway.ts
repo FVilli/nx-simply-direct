@@ -225,7 +225,7 @@ export class CoreGateway implements OnApplicationBootstrap {
       return { data: await (<any>service)[methodName](msg.payload, auth) };
     } catch (err:any) {
       console.error('err:', err?.message);
-      return { data:null, err };
+      return { data:null, err: err?.message };
     }
   }
 
