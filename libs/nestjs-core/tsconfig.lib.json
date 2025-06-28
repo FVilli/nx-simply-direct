@@ -12,5 +12,5 @@
     "noFallthroughCasesInSwitch": true,
     "composite": true
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts","package.json"]
 }

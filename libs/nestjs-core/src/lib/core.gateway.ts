@@ -8,6 +8,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
 import { Inject, Injectable, OnApplicationBootstrap, OnModuleInit } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { hash, QUID, distinctSubscriptions, isMatching } from './utils.functions';
 import { BaseService, IAuth, IEvent, IJwtPayload, ILoginMsg, ILogoutMsg, IRefreshMsg, IResponse, ISubscriptions, ITdt, Message, User } from '@simply-direct/common'
 import { CoreModuleOptions } from './core.module';
@@ -25,7 +26,8 @@ export class CoreGateway implements OnApplicationBootstrap {
     @Inject('CORE_MODULE_OPTIONS') private options: CoreModuleOptions,
     private readonly prismaService: PrismaService, 
     private readonly eventEmitter: EventEmitter2, 
-    private jwtService: JwtService) {}
+    private jwtService: JwtService,
+  private readonly moduleRef: ModuleRef) {}
   
   async onApplicationBootstrap() {
     // serve perchè quando stoppo il backend potrei non fare in tempo a gestire bene tutte le disconnessioni
@@ -40,6 +42,12 @@ export class CoreGateway implements OnApplicationBootstrap {
     if(this._log) console.log(message, ...optionalParams);
   }
 
+// TODO: posso semplificare register rimuovendo requiresAuth
+// creo quindi semplicemente la mappa dei servizi esposti riprendibili per nome
+// il resto sarà gestiti da @DirectMethod
+// @DirectMethod() -> PUBBLICO
+// @DirectMethod([]) -> NECESSARIA autenticazione, ma non è richiesto un ruolo specifico
+// @DirectMethod([a,b,c]) -> NECESSARIA uno di questi ruoli
   register(serviceName: string, service: BaseService, requiresAuth = true) {
     this.ServicesMap.set(serviceName, { service, requiresAuth });
     this.console(`${ITdt()} 🤖 Registered service:`, serviceName);
@@ -347,4 +355,6 @@ export class CoreGateway implements OnApplicationBootstrap {
     this.console(`${ITdt()} 🤖 publishing event:`, event.name);
     this.eventEmitter.emit(name, event);
   }
+
+  
 }
