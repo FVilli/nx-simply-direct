@@ -3,7 +3,7 @@ import { MsgType } from './enums';
 import { User } from './types';
 
 //export interface ISocketSession { socket: Socket; clientId?: string; auth?: IAuth; subscriptions: ISubscriptions;} // questa la devo spostare in nestjs-core
-export interface IEvent<T> { name: string; payload?: T; ts: Date; id: string; }
+export interface IEvent<T> { name: string; payload?: T; ts: Date; id?: string; }
 export interface IMessage<T> { topic: string; payload: T; _type?: MsgType; _id?: string; _dest?: string[]; _sender?: string; _rqst?: IMessage<any>;}
 export interface IRequest<RQ, RS> { source: IMessage<RQ>; sendResponse: (response: IMessage<RS>, source: IRequest<RQ, RS>) => void; }
 export interface IResponse<T> { data: T | null; err?: string; status?: 'OK' | 'NO-AUTH'; }
