@@ -154,8 +154,10 @@ export class CoreGateway implements OnApplicationBootstrap {
   private async login(payload: ILoginMsg, clientId: string): Promise<IAuth | null> {
     const phash = hash(payload.password);
     const name = payload.username;
+    this.console(`${ITdt()} 🔒 [login] clientId:${clientId} user:${name}`);
     const user = await this.prismaService['user'].findFirst({ where: { name, phash } });
     if (!!user && !user.disabled) {
+      this.console(`${ITdt()} 🔓 [login] clientId:${clientId} user:${name} ACCESS GRANTED !`);
       const token = this.jwtService.sign({ username: name, sub: user.id, clientId }, { expiresIn: this.options.jwtExpiresIn, secret: this.options.jwtSecret });
       await this.prismaService['client'].update({
         where: { name: payload.clientId },
@@ -164,6 +166,7 @@ export class CoreGateway implements OnApplicationBootstrap {
       //delete user.phash;
       return { user, token };
     } else {
+      this.console(`${ITdt()} ⚠️ [login] clientId:${clientId} user:${name} ACCESS DENIED !`);
       await this.prismaService['client'].update({
         where: { name: payload.clientId },
         data: { user_id: null, updated_at: new Date() },
