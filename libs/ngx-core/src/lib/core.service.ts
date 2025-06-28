@@ -94,13 +94,13 @@ export class CoreService {
     this.socket.on('connect', () => { 
       this._$connected.set(true); 
       this._$sessionId.set(this.socket.id); 
-      this._$events.set({ name: 'socket.connected', ts: new Date() });
+      this.dispatchEvent({ name: 'socket.connected', ts: new Date() });
     });
 
     this.socket.on('disconnect', () => { 
       this._$connected.set(false);
       this._$sessionId.set(undefined); 
-      this._$events.set({ name: 'socket.disconnected', ts: new Date() });
+      this.dispatchEvent({ name: 'socket.disconnected', ts: new Date() });
     }); 
 
 
@@ -135,8 +135,7 @@ export class CoreService {
     //this.events$ = fromEvent<IEvent<any>>(this.socket, 'event');
     this.socket.on("event", async (event:IEvent<any>, cb) => {
       cb({ status: 'ok' });
-      this._$events.set(event);
-      this._events$.next(event);
+      this.dispatchEvent(event);
     });
 
     this.socket.on("request", async (request:IMessage<any>, cb) => {
@@ -250,6 +249,11 @@ export class CoreService {
         this.setAuth(res.data);
       }
       if(!initialized) this._$initialized.set(true); 
+  }
+
+  private dispatchEvent<T>(event:IEvent<T>) {
+    this._$events.set(event);
+    this._events$.next(event);
   }
 
 }
