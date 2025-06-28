@@ -1,6 +1,6 @@
 {
   "name": "@simply-direct/nestjs-core",
-  "version": "0.0.40",
+  "version": "0.0.41",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -23,6 +23,6 @@
     "typescript": "^5.8.3"
   },
   "bin": {
-    "gen-api": "./cli/generate-api-service.ts"
+    "gen-api": "./cli/generate-api-service.js"
   }
 }

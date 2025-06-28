@@ -22,7 +22,7 @@
         "tsConfig": "libs/nestjs-core/tsconfig.lib.json",
         "packageJson": "libs/nestjs-core/package.json",
         "main": "libs/nestjs-core/src/index.ts",
-        "assets": ["libs/nestjs-core/*.md","libs/nestjs-core/cli/*.ts"]
+        "assets": ["libs/nestjs-core/*.md"]
       }
     },
     "nx-release-publish": {
