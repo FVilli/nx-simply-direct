@@ -1,6 +1,6 @@
 {
   "name": "@simply-direct/nestjs-core",
-  "version": "0.0.35",
+  "version": "0.0.36",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -21,5 +21,8 @@
   "devDependencies": {
     "@types/node": "^20.3.1",
     "typescript": "^5.8.3"
-  }
+  },
+  "files": [
+    "cli"
+  ]
 }

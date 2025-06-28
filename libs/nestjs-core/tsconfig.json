@@ -12,6 +12,7 @@
     "resolveJsonModule": true
   },
   "files": [],
+  "exclude": ["cli"],
   "include": [],
   "references": [
     {
