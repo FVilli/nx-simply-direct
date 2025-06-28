@@ -85,15 +85,6 @@ export class CoreService {
         this.console(`${ITdt()} 🤖 [socket:connected]: ${connected}`);
         if(connected) setTimeout(this.refresh.bind(this),10);
     })
-
-    // è prioritario il signal $events, qui rilancio gli eventi anche sull'osservabile
-    // this._events$.next deve stare solo qui ...
-    // da verificare: fose se faccio 2 set in sequenza del segnale mi perdo il primo ...
-    effect(()=>{
-      const event = this.$events();
-      this._events$.next(event);
-    })
-    
     
     const _address = `${this.address}?client-id=${this.clientId}`;
     this.console(`${ITdt()} 🤖 [init] socket.io-client address:`,_address);
@@ -105,7 +96,7 @@ export class CoreService {
       this._$sessionId.set(this.socket.id); 
       this._$events.set({ name: 'socket.connected', ts: new Date() });
     });
-    
+
     this.socket.on('disconnect', () => { 
       this._$connected.set(false);
       this._$sessionId.set(undefined); 
@@ -145,6 +136,7 @@ export class CoreService {
     this.socket.on("event", async (event:IEvent<any>, cb) => {
       cb({ status: 'ok' });
       this._$events.set(event);
+      this._events$.next(event);
     });
 
     this.socket.on("request", async (request:IMessage<any>, cb) => {
