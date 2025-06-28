@@ -1,6 +1,6 @@
 {
   "name": "@simply-direct/common",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
