@@ -33,10 +33,13 @@ for (const file of sourceFiles) {
     log(`# CLASS:${cls.getName()} #######################################################`)
 
     const className = cls.getName();
+
     if(className) {
       const direct_methods:string[] = []
       const isService = !!cls.getDecorators().find((d: Decorator) => d.getName() === 'Injectable' || d.getFullName()?.includes('@nestjs/common'));
       if (!isService) continue;
+
+      console.log(`🔬 ${className}`);
 
       const methods = cls.getMethods(); //.filter((method) => method.getDecorators().some((d: Decorator) => d.getName() === DECORATOR_NAME));
 
@@ -147,12 +150,10 @@ for (const file of sourceFiles) {
         }
 
         if(direct_method!=='') {
-          console.table({direct_method});
+          console.log(`📋 ${className}.${methodName}`);
           direct_methods.push(direct_method);
         }
-
-
-          
+  
       }
 
       if(direct_methods.length>0) services.set(className,direct_methods);
@@ -225,7 +226,7 @@ try {
 } catch {}
 
 if (existing === content) {
-  console.log(`📋 Non è necessario salvare un nuovo ApiService (${OUTPUT_PATH})`);
+  console.log(`ℹ️ Non è necessario salvare un nuovo ApiService (${OUTPUT_PATH})`);
 } else {
   // Salva solo se c'è una differenza
   fs.writeFileSync(destFilePath, content, 'utf8');
