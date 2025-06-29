@@ -1,10 +1,14 @@
 {
-  "name": "@simply-direct/zenstack-checker",
+  "name": "@simply-direct/zenstack-helper",
   "version": "0.0.51",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "fs-extra": "^11.3.0"
   }
 }
