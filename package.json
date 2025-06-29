@@ -1,6 +1,6 @@
 {
   "name": "@nx-simply-direct/source",
-  "version": "0.0.43",
+  "version": "0.0.44",
   "license": "MIT",
   "scripts": {
     "backend:migrate": "nx run backend:zenstack-generate && nx run backend:prisma-migrate",

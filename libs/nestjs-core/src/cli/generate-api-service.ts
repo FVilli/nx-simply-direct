@@ -2,6 +2,13 @@ import { Project, Decorator } from 'ts-morph';
 import * as path from 'path';
 import * as fs from 'fs';
 
+// PARAMETRI
+const isVerbose = process.argv.includes('--verbose') || process.argv.includes('-v');
+
+// FUNZIONI
+function log(message?: any, ...optionalParams: any[]) { if(isVerbose) console.log(message,optionalParams); }
+
+// SCRIPT
 const OUTPUT_PATH = '../frontend/src/@generated/api.service.ts';
 const DECORATOR_NAME = 'DirectMethod'; 
 
@@ -17,12 +24,13 @@ const services = new Map<string,string[]>();
 // ANALISI
 
 for (const file of sourceFiles) {
-  //console.log(file.getBaseName());
+
+  log(file.getBaseName());
   const classes = file.getClasses();
 
   for (const cls of classes) {
     
-    console.log(`# CLASS:${cls.getName()} #######################################################`)
+    log(`# CLASS:${cls.getName()} #######################################################`)
 
     const className = cls.getName();
     if(className) {
@@ -34,32 +42,31 @@ for (const file of sourceFiles) {
 
       for (const method of methods) {
         
-        console.log('');
-        console.log(`- METHOD:${method.getName()} ---------------------------------------------------------------`)
+        log('');
+        log(`- METHOD:${method.getName()} ---------------------------------------------------------------`)
         
         const methodName = method.getName();
         const parameters = method.getParameters()
         const decorators = method.getDecorators();
         const isDirectMethod = !!decorators.find((d: Decorator) => d.getName() === DECORATOR_NAME);
         
-        console.log("isDirectMethod",isDirectMethod);
-        
+        log("isDirectMethod",isDirectMethod);
         
         const p0 = parameters[0];
         let p0Type = '?';
         let p0Name = '?';
         if(!!p0) {
           p0Name = p0.getName();
-          console.log(`
+          log(`
 @ P0:${p0Name} @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@`)
           const isClassOrInterface = p0.getType().isClassOrInterface();
           const symbol = p0.getType().getSymbol()?.getName();
           const isArray = symbol==='Array';
 
-          console.log("p0",p0Name);
-          console.log("type.text",p0.getType().getText());
-          console.log("isClassOrInterface",p0.getType().isClassOrInterface());
-          console.log("symbol",p0.getType().getSymbol()?.getName());
+          log("p0",p0Name);
+          log("type.text",p0.getType().getText());
+          log("isClassOrInterface",p0.getType().isClassOrInterface());
+          log("symbol",p0.getType().getSymbol()?.getName());
           
           if(isClassOrInterface || isArray) {
             const chunks = p0.getType().getText().split(".");
@@ -91,14 +98,14 @@ for (const file of sourceFiles) {
         const rvAwaitedTypeSymbol = rvType.getTypeArguments()[0]?.getSymbol()?.getName();
         const rvApparentType = rvType.getApparentType().getText();
 
-        console.log(`
+        log(`
 @ RV:${rvSymbol || rvText} @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@`)
 
-        console.log("rvText",rvText);
-        console.log("rvSymbol",rvSymbol);
-        console.log("rvAwaitedType",rvAwaitedType);
-        console.log("rvAwaitedTypeSymbol",rvAwaitedTypeSymbol);
-        console.log("rvApparentType",rvApparentType);
+        log("rvText",rvText);
+        log("rvSymbol",rvSymbol);
+        log("rvAwaitedType",rvAwaitedType);
+        log("rvAwaitedTypeSymbol",rvAwaitedTypeSymbol);
+        log("rvApparentType",rvApparentType);
 
         let RV = '?'
         if(!rvSymbol || rvSymbol==='Array') {
@@ -206,9 +213,21 @@ content += `
 
 // SALVATAGGIO
 
-console.log(content);
+content = content.trim();
 
+log(content);
 
+const destFilePath = path.resolve(OUTPUT_PATH);
 
-fs.writeFileSync(path.resolve(OUTPUT_PATH), content.trim(), 'utf8');
-console.log(`✅ RPC contract written to ${OUTPUT_PATH}`);
+let existing = '';
+try {
+  if (fs.existsSync(destFilePath)) existing = fs.readFileSync(destFilePath, 'utf8').trim();
+} catch {}
+
+if (existing === content) {
+  console.log(`📋 Non è necessario salvare un nuovo ApiService (${OUTPUT_PATH})`);
+} else {
+  // Salva solo se c'è una differenza
+  fs.writeFileSync(destFilePath, content, 'utf8');
+  console.log(`✅ Nuovo ApiService creato ! (${OUTPUT_PATH})`);
+}
