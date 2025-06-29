@@ -1,6 +1,6 @@
 {
   "name": "@nx-simply-direct/source",
-  "version": "0.0.61",
+  "version": "0.0.62",
   "license": "MIT",
   "scripts": {
     "common:publish": "nx run-many --target=build --all --exclude $(nx show projects --projects 'apps/*') && cd dist/libs/common && npm publish --access public --tag latest",
