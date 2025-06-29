@@ -1,6 +1,6 @@
 {
   "name": "@simply-direct/ngx-core",
-  "version": "0.0.49",
+  "version": "0.0.50",
   "peerDependencies": {
     "@angular/core": "^19.2.0",
     "@angular/router": "^19.2.0",
@@ -8,7 +8,7 @@
     "rxjs": "^7.8.0",
     "@angular-architects/ngrx-toolkit": "^19.1.0",
     "socket.io-client": "^4.8.1",
-    "@simply-direct/common": "^0.0.49"
+    "@simply-direct/common": "^0.0.50"
   },
   "sideEffects": false
 }

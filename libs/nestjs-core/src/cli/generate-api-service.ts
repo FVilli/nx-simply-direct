@@ -40,7 +40,7 @@ for (const file of sourceFiles) {
       const isService = !!cls.getDecorators().find((d: Decorator) => d.getName() === 'Injectable' || d.getFullName()?.includes('@nestjs/common'));
       if (!isService) continue;
 
-      console.log(`🔬 ${className}: Searching@${DECORATOR_NAME}() ...`);
+      console.log(`🔬 ${className}: Searching @${DECORATOR_NAME}() ...`);
       console.log("-------------------------------------------------------------------");
 
       const methods = cls.getMethods(); //.filter((method) => method.getDecorators().some((d: Decorator) => d.getName() === DECORATOR_NAME));
