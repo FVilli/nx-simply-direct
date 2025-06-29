@@ -105,7 +105,7 @@ export default async function run(model: Model, options: PluginOptions) {
 
   let existing = '';
   try {
-    if (fs.existsSync(OUTPUT_PATH)) existing = fs.readFileSync(OUTPUT_PATH, 'utf8').trim();
+    if (fs.existsSync(OUTPUT_PATH)) existing = fs.readFileSync(OUTPUT_PATH, 'utf8');
   } catch {}
 
   if (existing === content) {
