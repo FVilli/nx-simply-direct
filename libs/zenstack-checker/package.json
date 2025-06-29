@@ -1,6 +1,6 @@
 {
   "name": "@simply-direct/zenstack-checker",
-  "version": "0.0.45",
+  "version": "0.0.46",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
