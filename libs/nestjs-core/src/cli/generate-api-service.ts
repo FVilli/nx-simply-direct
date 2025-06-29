@@ -41,7 +41,7 @@ for (const file of sourceFiles) {
       if (!isService) continue;
 
       console.log(`🔬 ${className}`);
-      console.log("----------------------------------------------");
+      console.log("-----------------------------------------------------");
 
       const methods = cls.getMethods(); //.filter((method) => method.getDecorators().some((d: Decorator) => d.getName() === DECORATOR_NAME));
 
@@ -152,7 +152,7 @@ for (const file of sourceFiles) {
         }
 
         if(direct_method!=='') {
-          console.log(`    📋 @${DECORATOR_NAME}: ${methodName}`);
+          console.log(`📋 ${methodName}`);
           direct_methods.push(direct_method);
         }
   
@@ -227,12 +227,17 @@ try {
   if (fs.existsSync(destFilePath)) existing = fs.readFileSync(destFilePath, 'utf8').trim();
 } catch {}
 
-console.log(`${ITdt()} ---------------------------------------`)
+console.log("-----------------------------------------------------");
+console.log(`${ITdt()}`);
+console.log("-----------------------------------------------------");
+console.log(`💾 Frontend ApiService: ${OUTPUT_PATH}`);
 
 if (existing === content) {
-  console.log(`⚠️ Non è necessario salvare un nuovo ApiService (${OUTPUT_PATH})`);
+  console.log(`⚠️ Non è necessario creare un nuovo ApiService`);
 } else {
   // Salva solo se c'è una differenza
   fs.writeFileSync(destFilePath, content, 'utf8');
-  console.log(`✅ Nuovo ApiService creato ! (${OUTPUT_PATH})`);
+  console.log(`✅ Nuovo ApiService creato !`);
 }
+
+
