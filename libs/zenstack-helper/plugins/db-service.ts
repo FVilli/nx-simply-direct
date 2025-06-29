@@ -15,13 +15,11 @@ const CONTENT = `
 
 import { inject, Injectable } from "@angular/core";
 import { CoreService } from "@simply-direct/ngx-core";
-import { Prisma, <#ENTITIES_LIST#> } from "@prisma/client"
+import { Prisma,<#ENTITIES_LIST#> } from "@prisma/client"
 
 @Injectable()
 export class DbService {
-
     private readonly core = inject(CoreService);
-
     <#ENTITIES_BLOCKS#>
 }`
 
@@ -105,5 +103,16 @@ export default async function run(model: Model, options: PluginOptions) {
   content = content.replace('<#ENTITIES_LIST#>',entities.join(','));
   content = content.replace('<#ENTITIES_BLOCKS#>',blocks);
 
-  fs.writeFileSync(OUTPUT_PATH,content);
+  let existing = '';
+  try {
+    if (fs.existsSync(OUTPUT_PATH)) existing = fs.readFileSync(OUTPUT_PATH, 'utf8').trim();
+  } catch {}
+
+  if (existing === content) {
+    console.log(`⚠️  Non è necessario creare un nuovo DbService`);
+  } else {
+    fs.writeFileSync(OUTPUT_PATH, content, 'utf8');
+    console.log(`✅ Nuovo DbService creato !`);
+  }
+
 }

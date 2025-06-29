@@ -1,6 +1,6 @@
 {
   "name": "@simply-direct/zenstack-helper",
-  "version": "0.0.59",
+  "version": "0.0.60",
   "type": "commonjs",
   "dependencies": {
     "tslib": "^2.3.0"
