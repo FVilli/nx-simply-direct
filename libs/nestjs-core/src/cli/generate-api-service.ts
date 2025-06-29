@@ -3,8 +3,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ITdt } from '@simply-direct/common';
 
+console.log(process.argv);
+
 // PARAMETRI
-const isVerbose = process.argv.includes('--verbose') || process.argv.includes('-v');
+const isVerbose = process.argv.includes('--log') || process.argv.includes('-l');
 
 // FUNZIONI
 function log(message?: any, ...optionalParams: any[]) { if(isVerbose) console.log(message,optionalParams); }
@@ -233,7 +235,7 @@ console.log("-----------------------------------------------------");
 console.log(`💾 Frontend ApiService: ${OUTPUT_PATH}`);
 
 if (existing === content) {
-  console.log(`⚠️ Non è necessario creare un nuovo ApiService`);
+  console.log(`⚠️  Non è necessario creare un nuovo ApiService`);
 } else {
   // Salva solo se c'è una differenza
   fs.writeFileSync(destFilePath, content, 'utf8');
