@@ -1,6 +1,6 @@
 {
   "name": "@simply-direct/nestjs-core",
-  "version": "0.0.58",
+  "version": "0.0.59",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",

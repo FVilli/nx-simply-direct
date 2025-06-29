@@ -2,79 +2,108 @@ import { type PluginOptions, ZModelCodeGenerator, getLiteral } from '@zenstackhq
 import { isDataModel, type DataModel, type Model, type DataModelAttribute } from '@zenstackhq/sdk/ast';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { nextTick } from 'process';
 
-// esempio di plugin che genera documentazione in Markdown
+const OUTPUT_PATH = '../frontend/src/@generated/db.service.ts';
 
-export const name = 'Markdown';
+const CONTENT = `
+// =====================================================
+//  NON MODIFICARE QUESTO FILE !!
+//  QUESTO FILE VIENE GENERATO AUTOMATICAMENTE ...
+//  LEGGERE ATTENTAMENTE LE ISTRUZIONI !!! 
+// =====================================================
 
-function generateDataModelDocs(dataModels: DataModel[]) {
-  // AST -> ZModel source generator
-  const zmodelCodeGen = new ZModelCodeGenerator();
+import { inject, Injectable } from "@angular/core";
+import { CoreService } from "@simply-direct/ngx-core";
+import { Prisma, <#ENTITIES_LIST#> } from "@prisma/client"
 
-  // all CRUD operations
-  const CRUD = ['create', 'read', 'update', 'delete'];
+@Injectable()
+export class DbService {
 
-  const docs = dataModels.map(dataModel => {
-    // first, group model attributes by CRUD operations
-    const groupByCrud = dataModel.attributes
-      .filter(attr => ['@@allow', '@@deny'].includes(attr.decl.ref?.name || ''))
-      .reduce<Record<string, DataModelAttribute[]>>((group, attr) => {
-        const ops = getLiteral<string>(attr.args[0].value);
-        if (ops) {
-          const splitOps = ops == 'all' ? CRUD : ops.split(',').map(op => op.trim());
+    private readonly core = inject(CoreService);
 
-          splitOps.forEach(op => {
-            group[op] = group[op] || [];
-            group[op].push(attr);
-          });
-        }
+    <#ENTITIES_BLOCKS#>
+}`
 
-        return group;
-      }, {});
+const BLOCK = `
+    <ntt> = {
 
-    // then generate rules for each operation
-    const policies = CRUD.map(op => {
-      const rules = groupByCrud[op]
-        ? groupByCrud[op]
-            // output `@@deny` before `@@allow`
-            .sort(a => {
-              return a.decl.ref?.name == '@@deny' ? -1 : 1;
-            })
-            .map(attr => `  - ${attr.decl.ref?.name == '@@deny' ? '❌ ' : '✅ '}${zmodelCodeGen.generate(attr.args[1].value)}`)
-            .join('\n')
-        : [];
+        // CREATION
+        create: async (args:Prisma.<Ntt>CreateArgs):Promise<<Ntt> | null> => { return await this.core.prisma('<ntt>.create',args); },
+        createMany: async (args:Prisma.<Ntt>CreateManyArgs): Promise<Prisma.BatchPayload | null> => { return await this.core.prisma('<ntt>.createMany',args); },
+  
+        // READ
+        findMany: async (args?: Prisma.<Ntt>FindManyArgs):Promise<<Ntt>[] | null> => { return await this.core.prisma('<ntt>.findMany',args); },
+                
+        
+        // findFirst<T extends UserFindFirstArgs>(args?: T): Promise<User | null>;
+        
+        // findFirstOrThrow<T extends UserFindFirstArgs>(args?: T): Promise<User>;
+        
+        // findUnique<T extends UserFindUniqueArgs>(args: T): Promise<User | null>;
+        
+        // findUniqueOrThrow<T extends UserFindUniqueArgs>(args: T): Promise<User>;
+        
+        // // UPDATE
+        // update<T extends UserUpdateArgs>(args: T): Promise<User>;
+        
+        // updateMany<T extends UserUpdateManyArgs>(args: T): Promise<Prisma.BatchPayload>;
+        
+        // // DELETE
+        // delete<T extends UserDeleteArgs>(args: T): Promise<User>;
+        
+        // deleteMany<T extends UserDeleteManyArgs>(args?: T): Promise<Prisma.BatchPayload>;
+        
+        // // UPSERT
+        // upsert<T extends UserUpsertArgs>(args: T): Promise<User>;
+        
+        // // AGGREGATION
+        // count<T extends UserCountArgs>(args?: T): Promise<number>;
+        
+        // aggregate<T extends UserAggregateArgs>(args: T): Promise<UserAggregateResult>;
+        
+        // groupBy<T extends UserGroupByArgs>(args: T): Promise<UserGroupByResult[]>;
+    
+    }
+`
 
-      return [`- ${op.toUpperCase()}`, rules].join('\n');
-    }).join('\n');
+function firstLetterLowercase(str: string): string {
+  if (!str || str.length === 0) return str;
+  return str.charAt(0).toLowerCase() + str.slice(1);
+}
 
-    return `## ${dataModel.name}\n\n${policies}`;
-  });
+function firstLetterUppercase(str: string): string {
+  if (!str || str.length === 0) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
-  return docs.join('\n\n');
+function replaceAll(str: string, searchValue: string, replaceValue: string): string {
+  if (!str || searchValue === '') return str;
+  return str.split(searchValue).join(replaceValue);
 }
 
 export default async function run(model: Model, options: PluginOptions) {
-  // process options
-  const title = options['title'] ?? 'My Application Model';
-  const description = options['description'] ?? 'Description of my application';
-
+  
   // get all data models
   const dataModels = model.declarations.filter((x): x is DataModel => isDataModel(x));
 
   // TOC
-  const toc = dataModels.map(x => `- [${x.name}](#${x.name})`).join('\n');
+  const entities = dataModels.map(x => x.name);
 
-  // data model docs
-  const dataModelDocs = generateDataModelDocs(dataModels);
+  let blocks = '';
 
-  fs.writeFileSync('./schema.md',
-    `# ${title}
-    
-${description}
-    
-${toc}
-    
-${dataModelDocs}
-    `,
-  );
+  for(const entity of entities) {
+    let eb = BLOCK;
+    const ntt = firstLetterLowercase(entity);
+    const Ntt = firstLetterUppercase(entity);
+    eb = replaceAll(eb,'<ntt>',ntt);
+    eb = replaceAll(eb,'<Ntt>',Ntt);
+    blocks += eb;
+  }
+
+  let content = CONTENT;
+  content = content.replace('<#ENTITIES_LIST#>',entities.join(','));
+  content = content.replace('<#ENTITIES_BLOCKS#>',blocks);
+
+  fs.writeFileSync(OUTPUT_PATH,content);
 }
