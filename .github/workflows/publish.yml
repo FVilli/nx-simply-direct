@@ -51,6 +51,13 @@ jobs:
           npm publish --access public --tag latest
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Publish library zenstack-helper
+        run: |
+          cd dist/libs/zenstack-helper
+          npm publish --access public --tag latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish library ngx-core
         run: |

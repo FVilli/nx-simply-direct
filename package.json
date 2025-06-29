@@ -3,10 +3,6 @@
   "version": "0.0.53",
   "license": "MIT",
   "scripts": {
-    "backend:migrate": "nx run backend:zenstack-generate && nx run backend:prisma-migrate",
-    "backend:serve": "nx run backend:serve",
-    "frontend-blank:serve": "nx run frontend-blank:serve",
-    "frontend-blank:build-watch": "nx run frontend-blank:build:development --watch",
     "common:publish": "nx run-many --target=build --all --exclude $(nx show projects --projects 'apps/*') && cd dist/libs/common && npm publish --access public --tag latest",
     "nestjs-core:publish": "nx run-many --target=build --all && cd dist/libs/nestjs-core && npm publish --access public --tag latest",
     "ngx-core:publish": "nx run-many --target=build --all && cd dist/libs/ngx-core && npm publish --access public --tag latest",
