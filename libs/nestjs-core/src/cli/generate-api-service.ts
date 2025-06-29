@@ -3,13 +3,11 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ITdt } from '@simply-direct/common';
 
-console.log(process.argv);
-
 // PARAMETRI
-const isVerbose = process.argv.includes('--log') || process.argv.includes('-l');
+const showLog = process.argv.includes('--log') || process.argv.includes('-l');
 
 // FUNZIONI
-function log(message?: any, ...optionalParams: any[]) { if(isVerbose) console.log(message,optionalParams); }
+function log(message?: any, ...optionalParams: any[]) { if(showLog) console.log(message,optionalParams); }
 
 // SCRIPT
 const OUTPUT_PATH = '../frontend/src/@generated/api.service.ts';
@@ -42,8 +40,8 @@ for (const file of sourceFiles) {
       const isService = !!cls.getDecorators().find((d: Decorator) => d.getName() === 'Injectable' || d.getFullName()?.includes('@nestjs/common'));
       if (!isService) continue;
 
-      console.log(`🔬 ${className}`);
-      console.log("-----------------------------------------------------");
+      console.log(`🔬 ${className}: Searching@${DECORATOR_NAME}() ...`);
+      console.log("-------------------------------------------------------------------");
 
       const methods = cls.getMethods(); //.filter((method) => method.getDecorators().some((d: Decorator) => d.getName() === DECORATOR_NAME));
 
@@ -58,6 +56,7 @@ for (const file of sourceFiles) {
         const isDirectMethod = !!decorators.find((d: Decorator) => d.getName() === DECORATOR_NAME);
         
         log("isDirectMethod",isDirectMethod);
+        if (!isDirectMethod) continue;
         
         const p0 = parameters[0];
         let p0Type = '?';
@@ -229,9 +228,9 @@ try {
   if (fs.existsSync(destFilePath)) existing = fs.readFileSync(destFilePath, 'utf8').trim();
 } catch {}
 
-console.log("-----------------------------------------------------");
+console.log("-------------------------------------------------------------------");
 console.log(`${ITdt()}`);
-console.log("-----------------------------------------------------");
+console.log("-------------------------------------------------------------------");
 console.log(`💾 Frontend ApiService: ${OUTPUT_PATH}`);
 
 if (existing === content) {
