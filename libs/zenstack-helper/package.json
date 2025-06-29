@@ -1,12 +1,7 @@
 {
   "name": "@simply-direct/zenstack-helper",
-  "version": "0.0.56",
+  "version": "0.0.57",
   "type": "commonjs",
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
-  "exports": {
-    "./*": "./src/lib/*"
-  },
   "dependencies": {
     "tslib": "^2.3.0"
   },
