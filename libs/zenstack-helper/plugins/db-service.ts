@@ -35,9 +35,9 @@ const BLOCK = `
         upsert: async (args:Prisma.<Ntt>UpsertArgs):Promise<<Ntt> | null> => { return await this.core.prisma('<ntt>.upsert',args); },
         count: async (args?:Prisma.<Ntt>CountArgs): Promise<number | null> => { return await this.core.prisma('<ntt>.count',args); },
         aggregate: async (args:Prisma.<Ntt>AggregateArgs): Promise<Prisma.Get<Ntt>AggregateType<Prisma.<Ntt>AggregateArgs> | null> => { return await this.core.prisma('<ntt>.aggregate',args); },
-        groupBy: async (args:Prisma.<Ntt>GroupByArgs): Promise<any[] | null> => { return await this.core.prisma('<ntt>.groupBy',args); },
-        // delete<T extends UserDeleteArgs>(args: T): Promise<User>;
-        // deleteMany<T extends UserDeleteManyArgs>(args?: T): Promise<Prisma.BatchPayload>;    
+        groupBy: async <T>(args:Prisma.<Ntt>GroupByArgs): Promise<T[] | null> => { return await this.core.prisma('<ntt>.groupBy',args); },
+        delete: async (args:Prisma.<Ntt>DeleteArgs): Promise<<Ntt> | null> => { return await this.core.prisma('<ntt>.delete',args); },
+        deleteMany: async (args?:Prisma.<Ntt>DeleteManyArgs): Promise<Prisma.BatchPayload | null> => { return await this.core.prisma('<ntt>.deleteMany',args); },     
     }
 `
 
