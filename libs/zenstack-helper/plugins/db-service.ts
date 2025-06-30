@@ -25,29 +25,17 @@ export class DbService {
 
 const BLOCK = `
     <ntt> = {
-
-        // CREATION
         create: async (args:Prisma.<Ntt>CreateArgs):Promise<<Ntt> | null> => { return await this.core.prisma('<ntt>.create',args); },
         createMany: async (args:Prisma.<Ntt>CreateManyArgs): Promise<Prisma.BatchPayload | null> => { return await this.core.prisma('<ntt>.createMany',args); },
-  
-        // READ
         findMany: async (args?: Prisma.<Ntt>FindManyArgs):Promise<<Ntt>[] | null> => { return await this.core.prisma('<ntt>.findMany',args); },
         findFirst: async (args?: Prisma.<Ntt>FindFirstArgs):Promise<<Ntt> | null> => { return await this.core.prisma('<ntt>.findFirst',args); },
         findUnique: async (args:Prisma.<Ntt>FindUniqueArgs):Promise<<Ntt> | null> => { return await this.core.prisma('<ntt>.findUnique',args); },
-                        
-        // UPDATE
         update: async (args: Prisma.<Ntt>UpdateArgs):Promise<<Ntt> | null> => { return await this.core.prisma('<ntt>.update',args); },
-        updateMany: async (args: Prisma.<Ntt>UpdateManyArgs): Promise<Prisma.BatchPayload | null> => { return await this.core.prisma('<ntt>.updateMany',args); 
-
-        // UPSERT
+        updateMany: async (args: Prisma.<Ntt>UpdateManyArgs): Promise<Prisma.BatchPayload | null> => { return await this.core.prisma('<ntt>.updateMany',args); },
         upsert: async (args:Prisma.<Ntt>UpsertArgs):Promise<<Ntt> | null> => { return await this.core.prisma('<ntt>.upsert',args); },
-
-        // AGGREGATION
         count: async (args?:Prisma.<Ntt>CountArgs): Promise<number | null> => { return await this.core.prisma('<ntt>.count',args); },
         aggregate: async (args:Prisma.<Ntt>AggregateArgs): Promise<Prisma.Get<Ntt>AggregateType<Prisma.<Ntt>AggregateArgs> | null> => { return await this.core.prisma('<ntt>.aggregate',args); },
         groupBy: async (args:Prisma.<Ntt>GroupByArgs): Promise<any[] | null> => { return await this.core.prisma('<ntt>.groupBy',args); },
-
-        // DELETE
         // delete<T extends UserDeleteArgs>(args: T): Promise<User>;
         // deleteMany<T extends UserDeleteManyArgs>(args?: T): Promise<Prisma.BatchPayload>;    
     }
