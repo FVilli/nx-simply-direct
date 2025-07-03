@@ -1,11 +1,12 @@
 import { ITdt, uuidToBase64 } from "@simply-direct/common";
+import { v4 as uuidv4 } from 'uuid';
 
 const CLIENT_ID_KEY = "_CID";
 
 export function ClientUID():string {
   const cid = localStorage.getItem(CLIENT_ID_KEY);
   if(cid) return cid;
-  const uid = uuidToBase64(crypto.randomUUID());
+  const uid = uuidToBase64(uuidv4());
   localStorage.setItem(CLIENT_ID_KEY, uid);
   console.log(`${ITdt()} <CORE> Client UID generated and stored in localStorage (${uid})`);
   return uid;

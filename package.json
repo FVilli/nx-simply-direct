@@ -1,6 +1,6 @@
 {
   "name": "@nx-simply-direct/source",
-  "version": "0.0.65",
+  "version": "0.0.66",
   "license": "MIT",
   "scripts": {
     "common:publish": "nx run-many --target=build --all --exclude $(nx show projects --projects 'apps/*') && cd dist/libs/common && npm publish --access public --tag latest",
@@ -38,6 +38,7 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
     "socket.io-client": "^4.8.1",
+    "uuid": "^11.1.0",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
